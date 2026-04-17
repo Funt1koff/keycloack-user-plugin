@@ -7,16 +7,15 @@
 
 1. Показывает в конфиге маппера чекбоксы для claim из входящего JSON (token payload).
 2. Берет значения только по отмеченным claim.
-3. Формирует стабильную строку вида `claim1=value1|claim2=value2|...`.
-4. Опционально добавляет `staticWord`.
+3. Формирует стабильную строку как конкатенацию value выбранных claim без разделителей.
+4. Опционально добавляет `staticWord` в конец этой строки.
 5. Считает `murmurhash3 (128-bit)`.
 6. Сохраняет значение в формате UUID в user attribute (по умолчанию `profileHash`).
 
 Для дополнительных полей есть `Custom claims` (через запятую).
 
 Для массивов значения склеиваются через запятую.
-3. Считает `murmurhash3 (32-bit)`.
-4. Сохраняет hex-значение в user attribute (по умолчанию `profileHash`).
+Источник для хэша (`source`) совместим с соседним Go-сервисом: это просто склейка value-полей по порядку + `staticWord` (если включен).
 
 ## Сборка
 
@@ -43,6 +42,7 @@ bin/kc.sh start
 3. Настроить параметры:
    - отметить нужные чекбоксы `Use claim: ...`
    - при необходимости заполнить `Custom claims`
+   - `Use userInfo endpoint`: `ON` чтобы догружать claims из userInfo
    - `Include static word`: `ON/OFF`
    - `Static word`: `scim-adapter`
    - `Target user attribute`: `profileHash`
@@ -51,5 +51,6 @@ bin/kc.sh start
 ## Поведение
 
 - Маппер срабатывает и для `importNewUser`, и для `updateBrokeredUser`.
+- До маппинга пишет входной снимок пользователя (`BrokeredIdentityContext`): базовые поля, attributes, access/id token payload, token response и userInfo (при `Log debug = ON`).
 - Если ни один выбранный claim не найден, пишется warning в лог и атрибут не меняется.
-- Если значения найдены, пишется info-лог с режимом (`import`/`update`) и источниками (`context-attribute`/`token-payload`).
+- Если значения найдены, пишется info-лог с режимом (`import`/`update`) и источниками (`context-attribute`/`access-token-payload`/`id-token-payload`/`user-info`).
